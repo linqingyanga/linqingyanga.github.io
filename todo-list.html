@@ -1,0 +1,202 @@
+<html>
+<!-- 色彩 https://ant.design/docs/spec/colors-cn-->
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-image: linear-gradient(to right, #e6e9f0, #eef1f5);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: white;
+            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .checkbox {
+            margin-right: 10px;
+        }
+
+        .selected {
+            background-color: rgb(244, 244, 244);
+            color: #000;
+        }
+
+        .time {
+            margin-right: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 50%;
+            border-radius: 5px;
+            border: 1px solid gray;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #1890ff;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            color: #fff;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>To-Do List</h1>
+    <div>
+        <input type="text" id="newItemInput" placeholder="Add new item">
+        <button onclick="addNewItem()">Add</button>
+        <button onclick="deleteSelected()">Delete Selected</button>
+    </div>
+    <div id="list">
+        <!-- items will be added here dynamically -->
+    </div>
+</body>
+
+<script>
+    var input = document.getElementById("newItemInput");
+    input.addEventListener("keyup", function (event) {
+        if (event.keyCode === 13) {
+            addItem();
+        }
+    });
+
+    function addNewItem() {
+        var input = document.getElementById("newItemInput");
+        var itemText = input.value;
+        input.value = "";
+
+        var list = document.getElementById("list");
+        var newItem = document.createElement("div");
+        newItem.classList.add("item");
+        newItem.innerHTML = `
+            <input type="checkbox" class="checkbox" onclick="selectItem(this.parentNode)">
+            <span>${itemText}</span>
+            <span class="time">60</span>
+            <button onclick="startTimer(this.parentNode)">Start Timer</button>
+        `;
+        list.appendChild(newItem);
+    }
+    
+    function addItem(text) {
+        var input = document.getElementById("newItemInput");
+        var item = (text != undefined) ? text : input.value;
+        input.value = "";
+        if (item === "") {
+            return;
+        }
+        var ul = document.getElementById("list");
+        var li = document.createElement("li");
+        ul.id = "list";
+        li.className = "item";
+        li.onclick = function () {
+            selectItem(this);
+        };
+        li.innerHTML = `<input type="checkbox" class="checkbox"> ${item} <span class="time"></span> <button class="start" onclick="startTimer(this.parentElement)">Start</button> <button class="remove" onclick="removeItem(this.parentElement)">Remove</button>`;
+        ul.appendChild(li);
+        
+        // Store the data in localStorage
+        if (text == undefined) {
+            var items = [];
+            let suffixLength = "\nStart\nRemove".length;
+            for (var i = 0; i < ul.children.length; i++) {
+                debugger
+                let totalLength = ul.children[i].innerText.length;
+                items.push(ul.children[i].innerText.substr(0,totalLength - suffixLength + 1));
+            }
+            localStorage.setItem("todoList", JSON.stringify(items));  
+        }
+    }
+
+    function removeItem(item) {
+        var ul = document.getElementById("list");
+        ul.removeChild(item);
+
+        // ReStore the data in localStorage
+        var items = [];
+        for (var i = 0; i < ul.children.length; i++) {
+            items.push(ul.children[i].innerText);
+        }
+        localStorage.setItem("todoList", JSON.stringify(items));  
+    }
+
+    function selectItem(item) {
+        var checkbox = item.querySelector("input[type='checkbox']");
+        checkbox.checked = !checkbox.checked;
+        item.classList.toggle("selected");
+    }
+
+    function deleteSelected() {
+        var items = document.getElementsByClassName("item");
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].classList.contains("selected")) {
+                items[i].remove();
+            }
+        }
+    }
+
+    function startTimer(item) {
+        var time = item.getElementsByClassName("time")[0];
+        var minutes = prompt("Enter the timer in minutes:");
+        var seconds = minutes * 60;
+        time.innerHTML = seconds;
+
+        function updateTimer() {
+            seconds--;
+            time.innerHTML = seconds;
+            if (seconds === 0) {
+                clearInterval(intervalId);
+            }
+        }
+
+        var intervalId = setInterval(updateTimer, 1000);
+    }
+
+    function startTimer1(item) {
+        var time = item.getElementsByClassName("time")[0];
+        var seconds = parseInt(time.innerHTML);
+
+        function updateTimer() {
+            seconds--;
+            time.innerHTML = seconds;
+            if (seconds === 0) {
+                clearInterval(intervalId);
+            }
+        }
+
+        var intervalId = setInterval(updateTimer, 1000);
+    }
+
+    window.onload = function() {
+        // Load the data from localStorage
+        var storedItems = localStorage.getItem("todoList");
+        if (storedItems) {
+            storedItems = JSON.parse(storedItems);
+            var ul = document.getElementById("list");
+            for (var i = 0; i < storedItems.length; i++) {
+                addItem(storedItems[i]);
+            }
+        }
+    };  
+</script>
